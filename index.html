@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chartcharcha Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0d0f; --surface: #111518; --card: #13181c;
+    --border: #1e2428; --accent: #f0b429; --accent2: #00e5a0;
+    --red: #ff4d6d; --text: #e8eaed; --muted: #6b7280;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+
+  /* Login */
+  #loginScreen {
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh;
+  }
+  .login-box {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:48px 40px; width:100%; max-width:400px;
+    text-align:center;
+  }
+  .login-logo { font-family:'Playfair Display',serif; font-size:1.8rem; margin-bottom:8px; }
+  .login-logo span { color:var(--accent); }
+  .login-sub { color:var(--muted); font-size:14px; margin-bottom:32px; }
+  .input { width:100%; background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; padding:14px 16px; color:var(--text);
+    font-family:'DM Sans',sans-serif; font-size:14px; outline:none;
+    transition:border-color 0.2s; margin-bottom:16px; }
+  .input:focus { border-color:var(--accent); }
+  .btn { width:100%; background:var(--accent); color:#000; border:none;
+    padding:14px; border-radius:8px; font-weight:600; font-size:15px;
+    cursor:pointer; font-family:'DM Sans',sans-serif; transition:opacity 0.2s; }
+  .btn:hover { opacity:0.85; }
+  .error-msg { color:var(--red); font-size:13px; margin-top:8px; }
+
+  /* Layout */
+  #app { display:none; }
+  .sidebar {
+    width:220px; background:var(--surface); border-right:1px solid var(--border);
+    height:100vh; position:fixed; top:0; left:0; padding:24px 0;
+    display:flex; flex-direction:column;
+  }
+  .sidebar-logo { font-family:'Playfair Display',serif; font-size:1.2rem; padding:0 20px 24px; border-bottom:1px solid var(--border); margin-bottom:16px; }
+  .sidebar-logo span { color:var(--accent); }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:12px 20px;
+    color:var(--muted); cursor:pointer; font-size:14px; font-weight:500;
+    transition:all 0.2s; border-left:3px solid transparent; }
+  .nav-item:hover { color:var(--text); background:rgba(255,255,255,0.03); }
+  .nav-item.active { color:var(--accent); border-left-color:var(--accent); background:rgba(240,180,41,0.05); }
+  .nav-item .icon { font-size:16px; }
+  .sidebar-bottom { margin-top:auto; padding:16px 20px; border-top:1px solid var(--border); }
+  .logout-btn { color:var(--muted); font-size:13px; cursor:pointer; background:none; border:none; font-family:'DM Sans',sans-serif; }
+  .logout-btn:hover { color:var(--red); }
+
+  .main { margin-left:220px; padding:32px; min-height:100vh; }
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* Page header */
+  .page-header { margin-bottom:32px; }
+  .page-title { font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:700; margin-bottom:4px; }
+  .page-sub { color:var(--muted); font-size:14px; }
+
+  /* Stats cards */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px; }
+  .stat-icon { font-size:1.5rem; margin-bottom:12px; }
+  .stat-val { font-family:'DM Mono',monospace; font-size:2rem; font-weight:500; color:var(--accent); }
+  .stat-label { color:var(--muted); font-size:13px; margin-top:4px; }
+
+  /* Card */
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:24px; }
+  .card-title { font-size:1rem; font-weight:600; margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+
+  /* Write form */
+  .form-group { margin-bottom:20px; }
+  .form-label { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px; display:block; text-transform:uppercase; letter-spacing:0.06em; }
+  .form-input { width:100%; background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; padding:12px 16px; color:var(--text);
+    font-family:'DM Sans',sans-serif; font-size:14px; outline:none;
+    transition:border-color 0.2s; }
+  .form-input:focus { border-color:var(--accent); }
+  textarea.form-input { min-height:200px; resize:vertical; line-height:1.7; }
+  .form-actions { display:flex; gap:12px; }
+  .btn-save { background:var(--surface); color:var(--text); border:1px solid var(--border);
+    padding:12px 24px; border-radius:8px; font-size:14px; font-weight:500;
+    cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+  .btn-save:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-publish { background:var(--accent); color:#000; border:none;
+    padding:12px 24px; border-radius:8px; font-size:14px; font-weight:600;
+    cursor:pointer; font-family:'DM Sans',sans-serif; transition:opacity 0.2s; }
+  .btn-publish:hover { opacity:0.85; }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:11px; font-weight:600; color:var(--muted);
+    text-transform:uppercase; letter-spacing:0.08em; padding:0 12px 12px; border-bottom:1px solid var(--border); }
+  td { padding:14px 12px; border-bottom:1px solid var(--border); font-size:14px; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,0.02); }
+
+  /* Badges */
+  .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px;
+    border-radius:20px; font-size:11px; font-weight:600; }
+  .badge-green { background:rgba(0,229,160,0.1); color:var(--accent2); }
+  .badge-yellow { background:rgba(240,180,41,0.1); color:var(--accent); }
+  .badge-red { background:rgba(255,77,109,0.1); color:var(--red); }
+
+  /* Action buttons */
+  .action-btn { background:none; border:1px solid var(--border); color:var(--muted);
+    padding:5px 12px; border-radius:6px; font-size:12px; cursor:pointer;
+    font-family:'DM Sans',sans-serif; transition:all 0.2s; margin-right:6px; }
+  .action-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .action-btn.danger:hover { border-color:var(--red); color:var(--red); }
+
+  /* Toast */
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--card);
+    border:1px solid var(--border); border-radius:10px; padding:14px 20px;
+    font-size:14px; z-index:999; transform:translateY(80px); opacity:0;
+    transition:all 0.3s; display:flex; align-items:center; gap:10px; }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.success { border-color:var(--accent2); }
+  .toast.error { border-color:var(--red); }
+
+  /* Empty state */
+  .empty { text-align:center; padding:48px; color:var(--muted); }
+  .empty-icon { font-size:2.5rem; margin-bottom:12px; }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">Chart<span>charcha</span></div>
+    <div class="login-sub">Admin Panel — Enter your password</div>
+    <input class="input" type="password" id="passwordInput" placeholder="Password" onkeydown="if(event.key==='Enter')login()"/>
+    <button class="btn" onclick="login()">Login →</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">Chart<span>charcha</span></div>
+    <div class="nav-item active" onclick="showPage('dashboard')"><span class="icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('write')"><span class="icon">✍️</span> Write Update</div>
+    <div class="nav-item" onclick="showPage('posts')"><span class="icon">📝</span> All Posts</div>
+    <div class="nav-item" onclick="showPage('subscribers')"><span class="icon">👥</span> Subscribers</div>
+    <div class="sidebar-bottom">
+      <button class="logout-btn" onclick="logout()">← Logout</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Welcome back, Sumeet 👋</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="stat-subscribers">—</div><div class="stat-label">Total Subscribers</div></div>
+        <div class="stat-card"><div class="stat-icon">👁️</div><div class="stat-val" id="stat-pageviews">—</div><div class="stat-label">Total Page Views</div></div>
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="stat-today">—</div><div class="stat-label">Views Today</div></div>
+        <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-val" id="stat-posts">—</div><div class="stat-label">Posts Published</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🚀 Quick Actions</div>
+        <button class="btn-publish" onclick="showPage('write')" style="margin-right:12px;">✍️ Write Today's Update</button>
+        <button class="btn-save" onclick="showPage('subscribers')">👥 View Subscribers</button>
+      </div>
+    </div>
+
+    <!-- Write Update -->
+    <div class="page" id="page-write">
+      <div class="page-header">
+        <div class="page-title">Write Daily Update</div>
+        <div class="page-sub">Write your market update and send it to all subscribers</div>
+      </div>
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input class="form-input" id="postTitle" placeholder="e.g. NIFTY hits 22,500 — here's what's driving it"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Summary (shown in email previews)</label>
+          <input class="form-input" id="postSummary" placeholder="One line summary of today's update..."/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Content</label>
+          <textarea class="form-input" id="postContent" placeholder="Write your full market update here...
+
+📊 Market Overview:
+NIFTY closed at...
+
+🔦 Sector Spotlight:
+Banking sector led gains...
+
+💡 Sumeet's Take:
+Today's move was driven by...
+
+📅 Events to Watch:
+- RBI policy on Friday
+- TCS results next week"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn-save" onclick="savePost()">💾 Save Draft</button>
+          <button class="btn-publish" onclick="saveAndPublish()">📨 Publish & Send to Subscribers →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Posts -->
+    <div class="page" id="page-posts">
+      <div class="page-header">
+        <div class="page-title">All Posts</div>
+        <div class="page-sub">Manage your daily market updates</div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="postsTable">
+            <tr><td colspan="4"><div class="empty"><div class="empty-icon">📝</div>No posts yet</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Subscribers -->
+    <div class="page" id="page-subscribers">
+      <div class="page-header">
+        <div class="page-title">Subscribers</div>
+        <div class="page-sub" id="subCount">Loading...</div>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Name</th>
+              <th>Subscribed On</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="subscribersTable">
+            <tr><td colspan="4"><div class="empty"><div class="empty-icon">👥</div>No subscribers yet</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = window.location.origin;
+  let token = localStorage.getItem('cc_token');
+
+  // Auto-login if token exists
+  if (token) showApp();
+
+  // ─── Auth ─────────────────────────────────────────────────
+  async function login() {
+    const password = document.getElementById('passwordInput').value;
+    try {
+      const res = await fetch(`${API}/api/admin/login`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      if (data.token) {
+        token = data.token;
+        localStorage.setItem('cc_token', token);
+        showApp();
+      } else {
+        document.getElementById('loginError').textContent = '❌ Wrong password. Try again.';
+      }
+    } catch {
+      document.getElementById('loginError').textContent = '❌ Cannot connect to server.';
+    }
+  }
+
+  function showApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard();
+  }
+
+  function logout() {
+    localStorage.removeItem('cc_token');
+    token = null;
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+
+  // ─── Navigation ───────────────────────────────────────────
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`page-${name}`).classList.add('active');
+    event.currentTarget?.classList.add('active');
+    if (name === 'dashboard') loadDashboard();
+    if (name === 'subscribers') loadSubscribers();
+    if (name === 'posts') loadPosts();
+  }
+
+  // ─── Dashboard ────────────────────────────────────────────
+  async function loadDashboard() {
+    try {
+      const res = await fetch(`${API}/api/admin/analytics`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      document.getElementById('stat-subscribers').textContent = data.total_subscribers ?? '0';
+      document.getElementById('stat-pageviews').textContent = data.total_pageviews ?? '0';
+      document.getElementById('stat-today').textContent = data.today_pageviews ?? '0';
+      document.getElementById('stat-posts').textContent = data.total_posts ?? '0';
+    } catch { }
+  }
+
+  // ─── Write & Publish ──────────────────────────────────────
+  async function savePost() {
+    const title = document.getElementById('postTitle').value.trim();
+    const content = document.getElementById('postContent').value.trim();
+    const summary = document.getElementById('postSummary').value.trim();
+    if (!title || !content) return showToast('Please add a title and content', 'error');
+    try {
+      const res = await fetch(`${API}/api/admin/updates`, {
+        method: 'POST', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title, content, summary })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('✅ Draft saved!', 'success');
+        return data.id;
+      }
+    } catch { showToast('Error saving post', 'error'); }
+  }
+
+  async function saveAndPublish() {
+    const id = await savePost();
+    if (!id) return;
+    try {
+      const res = await fetch(`${API}/api/admin/updates/${id}/publish`, {
+        method: 'POST', headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`🎉 Published! Sent to ${data.sent_to || 0} subscribers`, 'success');
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postContent').value = '';
+        document.getElementById('postSummary').value = '';
+      }
+    } catch { showToast('Error publishing', 'error'); }
+  }
+
+  // ─── Posts ────────────────────────────────────────────────
+  async function loadPosts() {
+    try {
+      const res = await fetch(`${API}/api/admin/updates`, { headers: { Authorization: `Bearer ${token}` } });
+      const posts = await res.json();
+      const tbody = document.getElementById('postsTable');
+      if (!posts.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty"><div class="empty-icon">📝</div>No posts yet</div></td></tr>'; return; }
+      tbody.innerHTML = posts.map(p => `
+        <tr>
+          <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.title}</td>
+          <td><span class="badge ${p.published ? 'badge-green' : 'badge-yellow'}">${p.published ? '● Published' : '○ Draft'}</span></td>
+          <td style="color:var(--muted);font-size:13px;">${p.published_at ? new Date(p.published_at).toLocaleDateString('en-IN') : new Date(p.created_at).toLocaleDateString('en-IN')}</td>
+          <td>
+            ${!p.published ? `<button class="action-btn" onclick="publishPost(${p.id})">📨 Publish</button>` : ''}
+            <button class="action-btn danger" onclick="deletePost(${p.id})">🗑 Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch { }
+  }
+
+  async function publishPost(id) {
+    const res = await fetch(`${API}/api/admin/updates/${id}/publish`, { method:'POST', headers:{ Authorization:`Bearer ${token}` } });
+    const data = await res.json();
+    if (data.success) { showToast(`🎉 Sent to ${data.sent_to || 0} subscribers!`, 'success'); loadPosts(); }
+  }
+
+  async function deletePost(id) {
+    if (!confirm('Delete this post?')) return;
+    await fetch(`${API}/api/admin/updates/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+    showToast('🗑 Post deleted', 'success');
+    loadPosts();
+  }
+
+  // ─── Subscribers ──────────────────────────────────────────
+  async function loadSubscribers() {
+    try {
+      const res = await fetch(`${API}/api/admin/subscribers`, { headers: { Authorization: `Bearer ${token}` } });
+      const subs = await res.json();
+      document.getElementById('subCount').textContent = `${subs.filter(s=>s.active).length} active subscribers`;
+      const tbody = document.getElementById('subscribersTable');
+      if (!subs.length) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty"><div class="empty-icon">👥</div>No subscribers yet</div></td></tr>'; return; }
+      tbody.innerHTML = subs.map(s => `
+        <tr>
+          <td style="font-family:'DM Mono',monospace;font-size:13px;">${s.email}</td>
+          <td style="color:var(--muted)">${s.name || '—'}</td>
+          <td style="color:var(--muted);font-size:13px;">${new Date(s.subscribed_at).toLocaleDateString('en-IN')}</td>
+          <td><span class="badge ${s.active ? 'badge-green' : 'badge-red'}">${s.active ? '● Active' : '○ Unsubscribed'}</span></td>
+        </tr>
+      `).join('');
+    } catch { }
+  }
+
+  // ─── Toast ────────────────────────────────────────────────
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+</script>
+</body>
+</html>
